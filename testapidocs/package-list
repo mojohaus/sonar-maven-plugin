@@ -1,0 +1,3 @@
+org.codehaus.mojo.sonar
+org.codehaus.mojo.sonar.bootstrap
+org.codehaus.mojo.sonar.mock
