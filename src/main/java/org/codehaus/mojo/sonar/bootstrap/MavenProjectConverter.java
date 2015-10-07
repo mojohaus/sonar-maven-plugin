@@ -414,7 +414,6 @@ public class MavenProjectConverter
             else
             {
                 // Populate both deprecated and new property for backward compatibility
-                props.setProperty( ScanProperties.PROJECT_LIBRARIES, librariesValue );
                 props.setProperty( JAVA_PROJECT_MAIN_LIBRARIES, librariesValue );
             }
         }
@@ -427,7 +426,6 @@ public class MavenProjectConverter
         {
             String binPath = mainBinaryDir.getAbsolutePath();
             // Populate both deprecated and new property for backward compatibility
-            props.setProperty( ScanProperties.PROJECT_BINARY_DIRS, binPath );
             props.setProperty( JAVA_PROJECT_MAIN_BINARY_DIRS, binPath );
         }
         File testBinaryDir = resolvePath( pom.getBuild().getTestOutputDirectory(), pom.getBasedir() );
