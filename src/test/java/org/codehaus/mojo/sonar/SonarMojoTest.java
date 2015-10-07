@@ -71,25 +71,6 @@ public class SonarMojoTest
     }
 
     @Test
-    public void shouldExportBinaries()
-        throws Exception
-    {
-        File localRepo = temp.newFolder();
-        final ArtifactRepository localRepository =
-            new DefaultArtifactRepository( "local", localRepo.toURI().toURL().toString(), new DefaultRepositoryLayout() );
-        File commonsIo = new File( localRepo, "commons-io/commons-io/2.4/commons-io-2.4.jar" );
-        FileUtils.forceMkdir( commonsIo.getParentFile() );
-        commonsIo.createNewFile();
-
-        File baseDir = new File( "src/test/resources/org/codehaus/mojo/sonar/SonarMojoTest/sample-project" );
-        SonarMojo mojo = getMojo( baseDir );
-        mojo.setLocalRepository( localRepository );
-        mojo.execute();
-
-        assertPropsContains( entry( "sonar.binaries", new File( baseDir, "target/classes" ).getAbsolutePath() ) );
-    }
-
-    @Test
     public void shouldExportDefaultWarWebSource()
         throws Exception
     {
