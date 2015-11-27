@@ -1,5 +1,22 @@
 package org.codehaus.mojo.sonar;
 
+import java.io.IOException;
+import org.apache.maven.execution.MavenSession;
+import org.apache.maven.lifecycle.LifecycleExecutor;
+import org.apache.maven.plugin.AbstractMojo;
+import org.apache.maven.plugin.MavenPluginManager;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.Component;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.plugins.annotations.ResolutionScope;
+import org.apache.maven.project.MavenProject;
+import org.apache.maven.project.MavenProjectBuilder;
+import org.apache.maven.rtinfo.RuntimeInformation;
+import org.apache.maven.shared.dependency.graph.DependencyGraphBuilder;
+import org.codehaus.mojo.sonar.bootstrap.LogHandler;
+
 /*
  * The MIT License
  *
@@ -25,32 +42,10 @@ package org.codehaus.mojo.sonar;
  */
 
 import org.codehaus.mojo.sonar.bootstrap.MavenProjectConverter;
-import org.sonar.runner.api.EmbeddedRunner;
-import org.codehaus.mojo.sonar.bootstrap.LogHandler;
-import org.codehaus.mojo.sonar.bootstrap.RunnerFactory;
-import com.google.common.annotations.VisibleForTesting;
-import org.apache.maven.artifact.factory.ArtifactFactory;
-import org.apache.maven.artifact.metadata.ArtifactMetadataSource;
-import org.apache.maven.artifact.repository.ArtifactRepository;
-import org.apache.maven.artifact.resolver.ArtifactCollector;
-import org.apache.maven.execution.MavenSession;
-import org.apache.maven.lifecycle.LifecycleExecutor;
-import org.apache.maven.plugin.AbstractMojo;
-import org.apache.maven.plugin.MavenPluginManager;
-import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugin.MojoFailureException;
-import org.apache.maven.plugins.annotations.Component;
-import org.apache.maven.plugins.annotations.Mojo;
-import org.apache.maven.plugins.annotations.Parameter;
-import org.apache.maven.plugins.annotations.ResolutionScope;
-import org.apache.maven.project.MavenProject;
-import org.apache.maven.project.MavenProjectBuilder;
-import org.apache.maven.rtinfo.RuntimeInformation;
-import org.apache.maven.shared.dependency.tree.DependencyTreeBuilder;
 import org.codehaus.mojo.sonar.bootstrap.RunnerBootstrapper;
+import org.codehaus.mojo.sonar.bootstrap.RunnerFactory;
+import org.sonar.runner.api.EmbeddedRunner;
 import org.sonatype.plexus.components.sec.dispatcher.SecDispatcher;
-
-import java.io.IOException;
 
 /**
  * Analyze project. SonarQube server must be started.
@@ -63,7 +58,7 @@ public class SonarMojo
     @Parameter( defaultValue = "${project}", readonly = true )
     protected MavenProject project;
 
-    @Parameter( defaultValue = "${session}", readonly = true )
+    @Parameter( defaultValue = "${session}", required = true, readonly = true )
     private MavenSession session;
 
     /**
@@ -84,19 +79,7 @@ public class SonarMojo
     private LifecycleExecutor lifecycleExecutor;
 
     @Component
-    private ArtifactFactory artifactFactory;
-
-    @Parameter( defaultValue = "${localRepository}", readonly = true, required = true )
-    private ArtifactRepository localRepository;
-
-    @Component
-    private ArtifactMetadataSource artifactMetadataSource;
-
-    @Component
-    private ArtifactCollector artifactCollector;
-
-    @Component
-    private DependencyTreeBuilder dependencyTreeBuilder;
+    private DependencyGraphBuilder dependencyGraphBuilder;
 
     @Component
     private MavenProjectBuilder projectBuilder;
@@ -119,11 +102,9 @@ public class SonarMojo
         try
         {
             ExtensionsFactory extensionsFactory =
-                new ExtensionsFactory( getLog(), session, lifecycleExecutor, artifactFactory, localRepository,
-                                       artifactMetadataSource, artifactCollector, dependencyTreeBuilder, projectBuilder );
+                new ExtensionsFactory( getLog(), session, lifecycleExecutor, projectBuilder );
             DependencyCollector dependencyCollector =
-                new DependencyCollector( dependencyTreeBuilder, artifactFactory, localRepository,
-                                         artifactMetadataSource, artifactCollector );
+                new DependencyCollector( dependencyGraphBuilder, session );
             MavenProjectConverter mavenProjectConverter = new MavenProjectConverter( getLog(), dependencyCollector );
             LogHandler logHandler = new LogHandler( getLog() );
             RunnerFactory runnerFactory =
@@ -140,9 +121,4 @@ public class SonarMojo
         }
     }
 
-    @VisibleForTesting
-    void setLocalRepository( ArtifactRepository localRepository )
-    {
-        this.localRepository = localRepository;
-    }
 }

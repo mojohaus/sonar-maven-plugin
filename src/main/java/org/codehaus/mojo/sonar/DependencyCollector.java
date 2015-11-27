@@ -1,45 +1,35 @@
 package org.codehaus.mojo.sonar;
 
-import org.apache.maven.artifact.factory.ArtifactFactory;
-import org.apache.maven.artifact.metadata.ArtifactMetadataSource;
-import org.apache.maven.artifact.repository.ArtifactRepository;
-import org.apache.maven.artifact.resolver.ArtifactCollector;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Deque;
+import java.util.Iterator;
+import java.util.List;
+import org.apache.maven.artifact.resolver.filter.ArtifactFilter;
+import org.apache.maven.execution.MavenSession;
 import org.apache.maven.project.MavenProject;
-import org.apache.maven.shared.dependency.tree.DependencyNode;
-import org.apache.maven.shared.dependency.tree.DependencyTreeBuilder;
-import org.apache.maven.shared.dependency.tree.DependencyTreeBuilderException;
-import org.apache.maven.shared.dependency.tree.filter.AncestorOrSelfDependencyNodeFilter;
-import org.apache.maven.shared.dependency.tree.filter.DependencyNodeFilter;
-import org.apache.maven.shared.dependency.tree.filter.StateDependencyNodeFilter;
-import org.apache.maven.shared.dependency.tree.traversal.BuildingDependencyNodeVisitor;
-import org.apache.maven.shared.dependency.tree.traversal.CollectingDependencyNodeVisitor;
-import org.apache.maven.shared.dependency.tree.traversal.DependencyNodeVisitor;
-import org.apache.maven.shared.dependency.tree.traversal.FilteringDependencyNodeVisitor;
-
-import java.util.*;
+import org.apache.maven.project.ProjectBuildingRequest;
+import org.apache.maven.shared.dependency.graph.DependencyGraphBuilder;
+import org.apache.maven.shared.dependency.graph.DependencyGraphBuilderException;
+import org.apache.maven.shared.dependency.graph.DependencyNode;
+import org.apache.maven.shared.dependency.graph.filter.AncestorOrSelfDependencyNodeFilter;
+import org.apache.maven.shared.dependency.graph.filter.DependencyNodeFilter;
+import org.apache.maven.shared.dependency.graph.traversal.BuildingDependencyNodeVisitor;
+import org.apache.maven.shared.dependency.graph.traversal.CollectingDependencyNodeVisitor;
+import org.apache.maven.shared.dependency.graph.traversal.DependencyNodeVisitor;
+import org.apache.maven.shared.dependency.graph.traversal.FilteringDependencyNodeVisitor;
 
 public class DependencyCollector
 {
 
-    private final DependencyTreeBuilder dependencyTreeBuilder;
+    private final DependencyGraphBuilder dependencyGraphBuilder;
 
-    private final ArtifactFactory artifactFactory;
+    private final MavenSession session;
 
-    private final ArtifactRepository localRepository;
-
-    private final ArtifactMetadataSource artifactMetadataSource;
-
-    private final ArtifactCollector artifactCollector;
-
-    public DependencyCollector( DependencyTreeBuilder dependencyTreeBuilder, ArtifactFactory artifactFactory,
-                                ArtifactRepository localRepository, ArtifactMetadataSource artifactMetadataSource,
-                                ArtifactCollector artifactCollector )
+    public DependencyCollector( DependencyGraphBuilder dependencyGraphBuilder, MavenSession session )
     {
-        this.dependencyTreeBuilder = dependencyTreeBuilder;
-        this.artifactFactory = artifactFactory;
-        this.localRepository = localRepository;
-        this.artifactMetadataSource = artifactMetadataSource;
-        this.artifactCollector = artifactCollector;
+        this.dependencyGraphBuilder = dependencyGraphBuilder;
+        this.session = session;
     }
 
     private static class Dependency
@@ -91,9 +81,12 @@ public class DependencyCollector
         final List<Dependency> result = new ArrayList<Dependency>();
         try
         {
+            ArtifactFilter filter = null;
+
+            ProjectBuildingRequest projectBuildingRequest = session.getProjectBuildingRequest();
+            projectBuildingRequest.setProject( project );
             DependencyNode root =
-                dependencyTreeBuilder.buildDependencyTree( project, localRepository, artifactFactory,
-                                                           artifactMetadataSource, null, artifactCollector );
+                dependencyGraphBuilder.buildDependencyGraph( projectBuildingRequest, filter );
 
             DependencyNodeVisitor visitor = new BuildingDependencyNodeVisitor( new DependencyNodeVisitor()
             {
@@ -130,12 +123,8 @@ public class DependencyCollector
                 }
             } );
 
-            // mode verbose OFF : do not show the same lib many times
-            DependencyNodeFilter filter = StateDependencyNodeFilter.INCLUDED;
-
             CollectingDependencyNodeVisitor collectingVisitor = new CollectingDependencyNodeVisitor();
-            DependencyNodeVisitor firstPassVisitor = new FilteringDependencyNodeVisitor( collectingVisitor, filter );
-            root.accept( firstPassVisitor );
+            root.accept( collectingVisitor );
 
             DependencyNodeFilter secondPassFilter =
                 new AncestorOrSelfDependencyNodeFilter( collectingVisitor.getNodes() );
@@ -144,7 +133,7 @@ public class DependencyCollector
             root.accept( visitor );
 
         }
-        catch ( DependencyTreeBuilderException e )
+        catch ( DependencyGraphBuilderException e )
         {
             throw new IllegalStateException( "Can not load the graph of dependencies of the project " + project, e );
         }
