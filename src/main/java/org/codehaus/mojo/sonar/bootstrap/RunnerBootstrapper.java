@@ -1,5 +1,13 @@
 package org.codehaus.mojo.sonar.bootstrap;
 
+import java.io.IOException;
+import java.util.Properties;
+import org.apache.maven.artifact.versioning.ArtifactVersion;
+import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
+import org.apache.maven.execution.MavenSession;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.logging.Log;
+
 /*
  * The MIT License
  *
@@ -25,17 +33,9 @@ package org.codehaus.mojo.sonar.bootstrap;
  */
 
 import org.codehaus.mojo.sonar.ExtensionsFactory;
-import org.apache.maven.artifact.versioning.ArtifactVersion;
-import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
-import org.apache.maven.execution.MavenSession;
-import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugin.logging.Log;
 import org.sonar.runner.api.EmbeddedRunner;
 import org.sonatype.plexus.components.sec.dispatcher.SecDispatcher;
 import org.sonatype.plexus.components.sec.dispatcher.SecDispatcherException;
-
-import java.io.IOException;
-import java.util.Properties;
 
 /**
  * Configure properties and bootstrap using SonarQube runner API (need SQ 4.3+)
@@ -81,16 +81,7 @@ public class RunnerBootstrapper
 
             if ( this.isVersionPriorTo5Dot2() )
             {
-                // for these versions, global properties and extensions are only applied when calling runAnalisys()
-                if ( this.supportsNewDependencyProperty() )
-                {
-                    runner.addExtensions( extensionsFactory.createExtensionsWithDependencyProperty().toArray() );
-                }
-                else
-                {
-                    runner.addExtensions( extensionsFactory.createExtensions().toArray() );
-                }
-
+                runner.addExtensions( extensionsFactory.createExtensionsWithDependencyProperty().toArray() );
             }
             if ( log.isDebugEnabled() )
             {
@@ -199,11 +190,6 @@ public class RunnerBootstrapper
         return artifactVersion.getMajorVersion() == 4 && artifactVersion.getMinorVersion() < 5;
     }
 
-    public boolean supportsNewDependencyProperty()
-    {
-        return !isVersionPriorTo5Dot0();
-    }
-
     public boolean isVersionPriorTo5Dot2()
     {
         if ( serverVersion == null )
@@ -217,15 +203,5 @@ public class RunnerBootstrapper
         }
 
         return artifactVersion.getMajorVersion() == 5 && artifactVersion.getMinorVersion() < 2;
-    }
-
-    public boolean isVersionPriorTo5Dot0()
-    {
-        if ( serverVersion == null )
-        {
-            return true;
-        }
-        ArtifactVersion artifactVersion = new DefaultArtifactVersion( serverVersion );
-        return artifactVersion.getMajorVersion() < 5;
     }
 }

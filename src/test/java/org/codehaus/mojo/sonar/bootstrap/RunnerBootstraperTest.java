@@ -1,33 +1,31 @@
 package org.codehaus.mojo.sonar.bootstrap;
 
-import static org.mockito.Mockito.when;
-import org.fest.assertions.Assertions;
-import org.apache.maven.project.MavenProject;
-import org.junit.Before;
-import org.mockito.MockitoAnnotations;
-import org.apache.maven.plugin.MojoExecutionException;
-
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
+import org.apache.maven.execution.MavenSession;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.logging.Log;
+import org.apache.maven.project.MavenProject;
+import org.codehaus.mojo.sonar.ExtensionsFactory;
+import org.fest.assertions.Assertions;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.sonar.runner.api.EmbeddedRunner;
+import org.sonatype.plexus.components.sec.dispatcher.SecDispatcher;
 
-import static org.mockito.Matchers.contains;
-
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.contains;
 import static org.mockito.Mockito.atLeastOnce;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Matchers.any;
-import org.sonatype.plexus.components.sec.dispatcher.SecDispatcher;
-import org.sonar.runner.api.EmbeddedRunner;
-import org.codehaus.mojo.sonar.ExtensionsFactory;
-import org.mockito.Mock;
-import org.apache.maven.plugin.logging.Log;
-import org.apache.maven.execution.MavenSession;
-import org.junit.Test;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 public class RunnerBootstraperTest
 {
@@ -65,13 +63,13 @@ public class RunnerBootstraperTest
                                                any( Properties.class ) ) ).thenReturn( projectProperties );
         List<Object> extensions = new LinkedList<Object>();
         extensions.add( new Object() );
-        when( extensionsFactory.createExtensions() ).thenReturn( extensions );
         when( extensionsFactory.createExtensionsWithDependencyProperty() ).thenReturn( extensions );
 
         when( runner.mask( anyString() ) ).thenReturn( runner );
         when( runner.unmask( anyString() ) ).thenReturn( runner );
         runnerBootstrapper =
-            new RunnerBootstrapper( log, session, securityDispatcher, runner, mavenProjectConverter, extensionsFactory );
+            new RunnerBootstrapper( log, session, securityDispatcher, runner, mavenProjectConverter,
+                                    extensionsFactory );
     }
 
     @Test
@@ -131,7 +129,7 @@ public class RunnerBootstraperTest
 
         verifyCommonCalls();
 
-        verify( extensionsFactory ).createExtensions();
+        verify( extensionsFactory ).createExtensionsWithDependencyProperty();
         verify( runner ).addExtensions( any( Object[].class ) );
         verifyNoMoreInteractions( runner );
     }
@@ -147,7 +145,7 @@ public class RunnerBootstraperTest
 
         verifyCommonCalls();
 
-        verify( extensionsFactory ).createExtensions();
+        verify( extensionsFactory ).createExtensionsWithDependencyProperty();
         verify( runner ).addExtensions( any( Object[].class ) );
         verifyNoMoreInteractions( runner );
     }
@@ -157,7 +155,6 @@ public class RunnerBootstraperTest
         throws MojoExecutionException, IOException
     {
         when( runner.serverVersion() ).thenReturn( null );
-        Assertions.assertThat( runnerBootstrapper.isVersionPriorTo5Dot0() ).isTrue();
         Assertions.assertThat( runnerBootstrapper.isVersionPriorTo5Dot2() ).isTrue();
         Assertions.assertThat( runnerBootstrapper.isVersionPriorTo4Dot5() ).isTrue();
 

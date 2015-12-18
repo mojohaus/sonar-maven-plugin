@@ -88,7 +88,7 @@
   </issueManagement>
 
   <properties>
-    <mavenVersion>3.2.3</mavenVersion>
+    <mavenVersion>3.3.9</mavenVersion>
     <mojo.java.target>1.7</mojo.java.target>
   </properties>
 
@@ -126,14 +126,7 @@
     <dependency>
       <groupId>org.apache.maven.shared</groupId>
       <artifactId>maven-dependency-tree</artifactId>
-      <version>2.1</version>
-      <exclusions>
-        <exclusion>
-          <!-- See SONAR-2455 -->
-          <groupId>classworlds</groupId>
-          <artifactId>classworlds</artifactId>
-        </exclusion>
-      </exclusions>
+      <version>3.0</version>
     </dependency>
     <dependency>
       <groupId>org.sonatype.plexus</groupId>
@@ -145,7 +138,6 @@
     <dependency>
       <groupId>org.apache.maven.plugin-tools</groupId>
       <artifactId>maven-plugin-annotations</artifactId>
-      <version>3.3</version>
       <scope>provided</scope>
     </dependency>
     
@@ -163,7 +155,7 @@
     <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
-      <version>10.0.1</version>
+      <version>18.0</version>
     </dependency>
     <dependency>
       <groupId>com.google.code.findbugs</groupId>
@@ -197,7 +189,7 @@
     <dependency>
       <groupId>org.apache.maven.plugin-testing</groupId>
       <artifactId>maven-plugin-testing-harness</artifactId>
-      <version>3.2.0</version>
+      <version>3.3.0</version>
       <scope>test</scope>
     </dependency>
     
