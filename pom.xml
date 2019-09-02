@@ -9,7 +9,7 @@
   <groupId>org.codehaus.mojo</groupId>
   <artifactId>sonar-maven-plugin</artifactId>
   <packaging>pom</packaging>
-  <version>3.6.1.1688</version>
+  <version>3.7-SNAPSHOT</version>
 
   <distributionManagement>
     <relocation>
@@ -22,7 +22,7 @@
     <connection>scm:git:https://github.com/mojohaus/sonar-maven-plugin.git</connection>
     <developerConnection>scm:git:ssh://git@github.com/mojohaus/sonar-maven-plugin.git</developerConnection>
     <url>https://github.com/mojohaus/sonar-maven-plugin</url>
-    <tag>sonar-maven-plugin-3.6.1.1688</tag>
+    <tag>HEAD</tag>
   </scm>
 
 </project>
